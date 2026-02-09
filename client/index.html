@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Pré Especialização em Paciente Grave - Liberdade Médica</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <script src="https://trackings.nemu.com.br/trackings/OxVyKz8wj1/script.js" async data-tracking-id="OxVyKz8wj1"
+    crossorigin="anonymous"></script>
+  <script src="https://t.contentsquare.net/uxa/89e8860f4d474.js"></script>
+  <script>
+    var timer = setInterval(function () {
+      var pixelPattern = /nemu_.{10}/;
+
+      clearInterval(timer);
+      var pixelTimer = setInterval(function () {
+        if (pixelPattern.test(document.location.search)) {
+          var params = new URLSearchParams(window.location.search);
+          var utm_source = params.get("utm_source");
+          var utm_campaign = params.get("utm_campaign");
+          var utm_medium = params.get("utm_medium");
+          var utm_content = params.get("utm_content");
+
+
+          var inputTimer = setInterval(function () {
+            var inputUtmSource = document.querySelector("input#form-field-utm_source");
+            var inputUtmCampaign = document.querySelector("input#form-field-utm_campaign");
+            var inputUtmMedium = document.querySelector("input#form-field-utm_medium");
+            var inputUtmContent = document.querySelector("input#form-field-utm_content");
+
+            if (inputUtmSource) {
+              inputUtmSource.value = utm_source;
+              inputUtmCampaign.value = utm_campaign;
+              inputUtmMedium.value = utm_medium;
+              inputUtmContent.value = utm_content;
+              clearInterval(inputTimer);
+            }
+          }, 100);
+          clearInterval(pixelTimer);
+        }
+      }, 100);
+    }, 100);
+  </script>
+
+
+  <!-- Meta Pixel Code -->
+  <script>
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+          n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1064327147462690');
+    fbq('track', 'PageView');
+  </script>
+</head>
+
+<body>
+  <script>
+    // Função para pegar cookies
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    }
+
+    // Buscar IP e enviar dados para o n8n
+    fetch("https://api64.ipify.org?format=json")
+      .then(response => response.json())
+      .then(data => {
+        // Capturar UTMs da URL
+        const urlParams = new URLSearchParams(window.location.search);
+
+        const payload = {
+          fbp: getCookie('_fbp') || null,
+          fbc: getCookie('_fbc') || null,
+          ua: navigator.userAgent,
+          url: window.location.href,
+          ip: data.ip,
+          timestamp: Math.floor(Date.now() / 1000),
+          utm_source: urlParams.get('utm_source'),
+          utm_medium: urlParams.get('utm_medium'),
+          utm_campaign: urlParams.get('utm_campaign'),
+          utm_content: urlParams.get('utm_content'),
+          utm_term: urlParams.get('utm_term')
+        };
+
+        // URL do webhook - use a Production URL do n8n
+        fetch("https://projetolm-n8n.8x0hqh.easypanel.host/webhook/pageview", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        })
+          .then(() => console.log('PageView tracked successfully'))
+          .catch(error => console.error('Error tracking pageview:', error));
+      })
+      .catch(error => console.error('Error getting IP:', error));
+  </script>
+  <script>
+    (function () {
+
+      /* =========================
+     CONFIG
+  ========================= */
+      const CHECKOUT_SELECTOR = 'a[href*="guru"], a[href*="checkout"], a[href*="pay"]';
+      const FORM_SELECTOR = 'form';
+
+      const FIELD_MAP = {
+        name: ['name', 'nome', '#nome', '#name'],
+        email: ['email', '#email'],
+        phone: ['phone', 'telefone', '#telefone']
+      };
+
+      /* =========================
+     HELPERS
+  ========================= */
+      function getParam(name) {
+        return new URLSearchParams(window.location.search).get(name);
+      }
+
+      function getSessionId() {
+        let sid = sessionStorage.getItem('session_id');
+        if (!sid) {
+          sid = crypto.randomUUID();
+          sessionStorage.setItem('session_id', sid);
+        }
+        return sid;
+      }
+
+      function save(key, value) {
+        if (value && !sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, value);
+        }
+      }
+
+      function get(key) {
+        return sessionStorage.getItem(key);
+      }
+
+      /* =========================
+     CAPTURA UTMs / IDs
+  ========================= */
+      [
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'utm_content',
+        'utm_term',
+        'gclid',
+        'fbclid'
+      ].forEach(p => {
+        if (getParam(p)) save(p, getParam(p));
+      });
+
+      save('session_id', getSessionId());
+
+      /* =========================
+     CAPTURA DO FORMULÁRIO
+  ========================= */
+      function captureForm(form) {
+        Object.keys(FIELD_MAP).forEach(key => {
+          FIELD_MAP[key].forEach(selector => {
+            const field = form.querySelector(selector);
+            if (field && field.value) {
+              save(key, field.value);
+            }
+          });
+        });
+      }
+
+      document.querySelectorAll(FORM_SELECTOR).forEach(form => {
+        form.addEventListener('submit', function () {
+          captureForm(form);
+        });
+      });
+
+      /* =========================
+     INJEÇÃO NO CHECKOUT
+  ========================= */
+      function applyToCheckout(link) {
+        try {
+          const url = new URL(link.href, window.location.origin);
+
+          [
+            'utm_source',
+            'utm_medium',
+            'utm_campaign',
+            'utm_content',
+            'utm_term',
+            'gclid',
+            'fbclid',
+            'session_id',
+            'name',
+            'email',
+            'phone'
+          ].forEach(k => {
+            const v = get(k);
+            if (v && !url.searchParams.has(k)) {
+              url.searchParams.set(k, v);
+            }
+          });
+
+          link.href = url.toString();
+        } catch (e) { }
+      }
+
+      function processLinks() {
+        document.querySelectorAll(CHECKOUT_SELECTOR).forEach(applyToCheckout);
+      }
+
+      processLinks();
+
+      /* =========================
+     LINKS DINÂMICOS
+  ========================= */
+      const observer = new MutationObserver(processLinks);
+      observer.observe(document.body, { childList: true, subtree: true });
+
+    })();
+  </script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
