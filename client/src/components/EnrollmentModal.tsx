@@ -4,12 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { User, Mail, Phone, Lock, Send, X, GraduationCap } from "lucide-react";
+import { User, Mail, Phone, Lock, Send, Stethoscope } from "lucide-react";
 
 interface EnrollmentModalProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
 }
+
+const crmOptions = [
+    { value: "A", label: "CRM Ativo há mais de 3 anos" },
+    { value: "B", label: "CRM Ativo há menos de 3 anos" },
+    { value: "C", label: "Revalidando" },
+    { value: "D", label: "Interno" },
+    { value: "E", label: "Estudante de Medicina Ciclo Clínico" },
+    { value: "F", label: "Estudante de Medicina Ciclo Básico" },
+    { value: "G", label: "Não sou médico(a)" },
+];
+
+const trackingKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid'] as const;
 
 export function EnrollmentModal({ isOpen, onOpenChange }: EnrollmentModalProps) {
     const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +29,8 @@ export function EnrollmentModal({ isOpen, onOpenChange }: EnrollmentModalProps) 
         name: "",
         email: "",
         phone: "",
-        experience: ""
+        crm_tag: "",
+        crm_option: ""
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -25,6 +38,18 @@ export function EnrollmentModal({ isOpen, onOpenChange }: EnrollmentModalProps) 
         setIsLoading(true);
 
         try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = sessionStorage.getItem('session_id') || crypto.randomUUID();
+
+            sessionStorage.setItem('session_id', sessionId);
+
+            const trackingData = trackingKeys.reduce<Record<string, string>>((acc, key) => {
+                acc[key] = sessionStorage.getItem(key) || urlParams.get(key) || "";
+                return acc;
+            }, {
+                session_id: sessionId
+            });
+
             // Send data to Webhook
             await fetch("https://projetolm-n8n.8x0hqh.easypanel.host/webhook/3848f193-6b80-4b4c-a1c6-d966a68d7ac5", {
                 method: "POST",
@@ -33,12 +58,12 @@ export function EnrollmentModal({ isOpen, onOpenChange }: EnrollmentModalProps) 
                 },
                 body: JSON.stringify({
                     ...formData,
+                    ...trackingData,
                     source: "landing_page_preppg",
                     date: new Date().toISOString()
                 }),
             });
 
-            // Redirect to Checkout
             // Redirect to Checkout with UTMs and User Data
             const checkoutUrl = new URL("https://clkdmg.site/pay/preespecializacao");
 
@@ -52,21 +77,16 @@ export function EnrollmentModal({ isOpen, onOpenChange }: EnrollmentModalProps) 
             appendParam("email", formData.email);
             appendParam("phone", formData.phone);
 
-            // 2. Add UTMs/Session from SessionStorage (captured by global script)
-            // Or fallback to URL params if script hasn't run or storage is empty
-            const getStoredOrUrlParam = (key: string) => {
-                return sessionStorage.getItem(key) || new URLSearchParams(window.location.search).get(key);
-            };
-
-            ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'session_id'].forEach(key => {
-                appendParam(key, getStoredOrUrlParam(key));
+            // 2. Add UTMs/Session captured from sessionStorage or current URL
+            Object.entries(trackingData).forEach(([key, value]) => {
+                appendParam(key, value);
             });
 
             window.location.href = checkoutUrl.toString();
 
         } catch (error) {
             console.error("Erro ao enviar dados:", error);
-            // Even if webhook fails, we might want to redirect or show error. 
+            // Even if webhook fails, we might want to redirect or show error.
             // Ideally redirect anyway to not lose the sale.
             window.location.href = "https://clkdmg.site/pay/preespecializacao";
         } finally {
@@ -88,10 +108,6 @@ export function EnrollmentModal({ isOpen, onOpenChange }: EnrollmentModalProps) 
                             Receba acesso exclusivo a Formação Paciente Grave
                         </DialogDescription>
                     </DialogHeader>
-
-                    {/* Close button styling override if needed, though default DialogClose is usually inside Content. 
-              The standard shadcn DialogContent includes a close X icon. We can let it be or custom style it.
-          */}
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
@@ -146,19 +162,22 @@ export function EnrollmentModal({ isOpen, onOpenChange }: EnrollmentModalProps) 
 
                         <div className="space-y-3">
                             <Label className="text-slate-300 flex items-center gap-2">
-                                <GraduationCap className="w-4 h-4 text-[#E53935]" />
-                                Quanto tempo de formado? *
+                                <Stethoscope className="w-4 h-4 text-[#E53935]" />
+                                Qual a situação do seu CRM hoje? *
                             </Label>
                             <RadioGroup
                                 required
-                                value={formData.experience}
-                                onValueChange={(val) => setFormData({ ...formData, experience: val })}
+                                value={formData.crm_tag}
+                                onValueChange={(val) => {
+                                    const selected = crmOptions.find(o => o.value === val);
+                                    setFormData({ ...formData, crm_tag: val, crm_option: selected?.label ?? "" });
+                                }}
                                 className="grid grid-cols-1 gap-3"
                             >
-                                {["Menos de 1 ano", "1 - 2 anos", "3 - 4 anos", "Mais de 5 anos"].map((option) => (
-                                    <div key={option} className="flex items-center space-x-2 rounded-lg border border-white/10 p-3 hover:bg-white/5 cursor-pointer transition-colors has-[:checked]:border-[#E53935] has-[:checked]:bg-[#E53935]/10">
-                                        <RadioGroupItem value={option} id={option} className="border-white/20 text-[#E53935]" />
-                                        <Label htmlFor={option} className="flex-1 cursor-pointer text-slate-300 font-normal">{option}</Label>
+                                {crmOptions.map((opt) => (
+                                    <div key={opt.value} className="flex items-center space-x-2 rounded-lg border border-white/10 p-3 hover:bg-white/5 cursor-pointer transition-colors has-[:checked]:border-[#E53935] has-[:checked]:bg-[#E53935]/10">
+                                        <RadioGroupItem value={opt.value} id={opt.value} className="border-white/20 text-[#E53935]" />
+                                        <Label htmlFor={opt.value} className="flex-1 cursor-pointer text-slate-300 font-normal">{opt.label}</Label>
                                     </div>
                                 ))}
                             </RadioGroup>
@@ -187,4 +206,3 @@ export function EnrollmentModal({ isOpen, onOpenChange }: EnrollmentModalProps) 
         </Dialog>
     );
 }
-
