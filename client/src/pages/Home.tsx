@@ -34,7 +34,7 @@ export default function Home() {
   const heroY = useTransform(scrollY, [0, 600], [0, 100]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: preppgData } = useGoogleSheetsPreppg();
-  const heroDate = preppgData?.Data ?? "24/02 - 20h";
+  const heroDate = preppgData?.Data ?? "22/08 - 20h";
 
   // Handle enrollment click
   const handleEnrollmentClick = () => {

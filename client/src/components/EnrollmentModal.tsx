@@ -12,13 +12,15 @@ interface EnrollmentModalProps {
 }
 
 const crmOptions = [
-    { value: "A", label: "CRM Ativo há mais de 3 anos" },
-    { value: "B", label: "CRM Ativo há menos de 3 anos" },
-    { value: "C", label: "Revalidando" },
-    { value: "D", label: "Interno" },
-    { value: "E", label: "Estudante de Medicina Ciclo Clínico" },
-    { value: "F", label: "Estudante de Medicina Ciclo Básico" },
-    { value: "G", label: "Não sou médico(a)" },
+    { value: "F", label: "CRM ativo ha mais de 6 anos" },
+    { value: "B", label: "CRM ativo de 3 a 6 anos" },
+    { value: "A", label: "CRM ativo ha menos de 3 anos" },
+    { value: "R", label: "Revalidando" },
+    { value: "G", label: "(Primeiro Ano) Interno" },
+    { value: "I", label: "(Ultimo Ano) Interno" },
+    { value: "C", label: "Estudante de Medicina - Ciclo Clinico" },
+    { value: "E", label: "Estudante de Medicina - Ciclo Basico" },
+    { value: "D", label: "Não sou médico(a)" },
 ];
 
 const trackingKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid'] as const;
@@ -167,6 +169,7 @@ export function EnrollmentModal({ isOpen, onOpenChange }: EnrollmentModalProps) 
                             </Label>
                             <RadioGroup
                                 required
+                                name="crm_tag"
                                 value={formData.crm_tag}
                                 onValueChange={(val) => {
                                     const selected = crmOptions.find(o => o.value === val);
@@ -175,10 +178,14 @@ export function EnrollmentModal({ isOpen, onOpenChange }: EnrollmentModalProps) 
                                 className="grid grid-cols-1 gap-3"
                             >
                                 {crmOptions.map((opt) => (
-                                    <div key={opt.value} className="flex items-center space-x-2 rounded-lg border border-white/10 p-3 hover:bg-white/5 cursor-pointer transition-colors has-[:checked]:border-[#E53935] has-[:checked]:bg-[#E53935]/10">
-                                        <RadioGroupItem value={opt.value} id={opt.value} className="border-white/20 text-[#E53935]" />
-                                        <Label htmlFor={opt.value} className="flex-1 cursor-pointer text-slate-300 font-normal">{opt.label}</Label>
-                                    </div>
+                                    <Label
+                                        key={opt.value}
+                                        htmlFor={`crm-${opt.value}`}
+                                        className="flex w-full items-center gap-3 rounded-lg border border-white/10 p-3 hover:bg-white/5 cursor-pointer transition-colors text-slate-300 font-normal has-[:checked]:border-[#E53935] has-[:checked]:bg-[#E53935]/10"
+                                    >
+                                        <RadioGroupItem value={opt.value} id={`crm-${opt.value}`} className="border-white/20 text-[#E53935]" />
+                                        <span className="flex-1">{opt.label}</span>
+                                    </Label>
                                 ))}
                             </RadioGroup>
                         </div>
